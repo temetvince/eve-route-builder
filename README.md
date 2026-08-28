@@ -1,3 +1,57 @@
+## About this fork
+
+This is [temetvince/eve-route-builder](https://github.com/temetvince/eve-route-builder),
+a fork of [wanderer-industries/eve-route-builder](https://github.com/wanderer-industries/eve-route-builder).
+`main` is a pristine mirror of upstream; all changes live on the `custom` branch:
+
+- **`secure` routing treats J-space as safe.** Upstream priced entering any
+  system with security < 0.45 at 50000 — including wormhole systems in the
+  user's own mapped chain — so "safest" routes took arbitrarily long
+  all-highsec detours rather than one extra chain hop (e.g. a C1 → C2 →
+  highsec exit next to the destination). J-space systems have no stargates, so
+  any J-system on a route can only come from a connection the user chose to
+  include; they now weigh the same as safe systems, while lowsec/nullsec
+  k-space, Pochven and Zarzakh keep the full penalty.
+- **Rewritten Dijkstra core** with proper relaxation (the old version's
+  decrease-key branch was dead code and stayed optimal only by accident of the
+  node-only weight model) and falsy-id-safe path reconstruction, shared by
+  `dijkstra` and `dijkstraMulti`.
+- **Test suites**: a reference-comparison suite (~10k randomized graphs across
+  all flags, mapped chains and multi-destination included), a heap sanity
+  check, and a regression test for the C1 → C2 scenario above.
+
+Two upstream test suites fail on a pristine checkout as well (stale `Graph`
+snapshots and controller spec drift) — they are unrelated to these changes.
+
+Used together with [temetvince/wanderer](https://github.com/temetvince/wanderer).
+
+### Keeping up with upstream
+
+```bash
+git fetch upstream
+git checkout custom
+git rebase upstream/main
+git push --force-with-lease origin custom
+```
+
+Remotes: `origin` → this fork, `upstream` → wanderer-industries.
+
+### Build and deploy
+
+```bash
+docker build -t eve-route-builder-custom:latest .
+```
+
+Reference `eve-route-builder-custom:latest` as the route-builder image in the
+community-edition `docker-compose.yml`.
+
+### Run the tests
+
+```bash
+npx jest src/utils          # this fork's suites (all passing)
+npx jest                    # everything, including the two pre-existing upstream failures
+```
+
 ## Description
 
 This is a tool for search route path for [EVE-ONLINE](https://www.eveonline.com/) game.
