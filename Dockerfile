@@ -42,10 +42,12 @@ COPY --chown=node:node . ./
 # Display directory structure
 RUN ls -l
 
-RUN mkdir -p ./eveData
-RUN curl -o ./eveData/mapSolarSystems.csv https://www.fuzzwork.co.uk/dump/latest/mapSolarSystems.csv
-RUN curl -o ./eveData/mapSolarSystemJumps.csv https://www.fuzzwork.co.uk/dump/latest/mapSolarSystemJumps.csv
-RUN npm run generateGraph
+# Build with the committed src/assets/graph.json instead of regenerating it
+# from Fuzzwork CSVs: those URLs now return 404, and curl without -f saved
+# the HTML error page, so generateGraph silently overwrote the graph with
+# garbage and the service crashed on startup. Refresh the graph deliberately
+# (fix scripts/ URLs, run `npm run generateGraph`, commit the result) rather
+# than on every image build.
 RUN npm run build
 RUN npm prune --production
 
