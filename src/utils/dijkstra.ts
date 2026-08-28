@@ -6,7 +6,22 @@ const prefer_shortest = () => {
   return 1;
 };
 
+// J-space (31000000-31999999, including Thera and drifter holes). Wormhole
+// systems have no stargates, so any J-system on a route is reachable only
+// through a mapped (or Thera) connection the user chose to include. Treating
+// them as unsafe would make "safest" avoid an extra chain hop at any cost -
+// e.g. take a long all-highsec detour instead of jumping through a connected
+// C2 with a closer highsec exit. The unsafe penalty is for lowsec/nullsec
+// k-space (and Pochven/Zarzakh, whose ids are in the k-space range).
+const isWormholeSpace = (system: number) => {
+  return system >= 31000000 && system < 32000000;
+};
+
 const prefer_safest = (graph: Graph, next_sys: number) => {
+  if (isWormholeSpace(next_sys)) {
+    return 1;
+  }
+
   if (graph.security(next_sys) < 0.45) {
     return 50000;
   }
