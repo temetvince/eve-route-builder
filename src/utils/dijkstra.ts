@@ -6,7 +6,7 @@ const prefer_shortest = () => {
   return 1;
 };
 
-const prefer_safest = (graph, next_sys) => {
+const prefer_safest = (graph: Graph, next_sys: number) => {
   if (graph.security(next_sys) < 0.45) {
     return 50000;
   }
@@ -14,30 +14,12 @@ const prefer_safest = (graph, next_sys) => {
   return 1;
 };
 
-const prefer_less_safe = (graph, next_sys) => {
+const prefer_less_safe = (graph: Graph, next_sys: number) => {
   if (graph.security(next_sys) >= 0.45) {
     return 50000;
   }
 
   return 1;
-};
-
-const path = (prev, start, end) => {
-  const queue = [];
-  let system = end;
-
-  while (system != start) {
-    queue.unshift(system);
-
-    if (!prev[system]) {
-      return [];
-    }
-    system = prev[system];
-  }
-
-  queue.unshift(start);
-
-  return queue;
 };
 
 const COST_FN = {
@@ -47,70 +29,98 @@ const COST_FN = {
 };
 
 export type SearchFlag = 'secure' | 'insecure' | 'shortest';
-export const dijkstra = (graph: Graph, start: number, end: number, flag: SearchFlag = 'shortest') => {
-  const prev = {};
-  const costs = {};
-  const entry = {};
 
-  const remaining: Set<number> = new Set([end]);
-
-  const weight_fn = COST_FN[flag];
-  costs[start] = 0.0;
+/**
+ * Dijkstra over the system graph with the flag's per-system entry cost.
+ *
+ * With the `secure` flag every unsafe system costs 50000 and every safe one
+ * costs 1, so minimizing total cost minimizes the number of unsafe systems
+ * first and the total number of jumps second - the shortest safe route.
+ * (`insecure` is the mirror image; `shortest` weighs every system equally.)
+ *
+ * Uses lazy re-insertion instead of decrease-key: relaxing a node enqueues it
+ * again at the lower cost, and stale queue entries are skipped when dequeued.
+ * State lives in Maps/Sets so system ids and costs are never subject to
+ * falsy-value pitfalls.
+ */
+const search = (graph: Graph, start: number, targets: number[], flag: SearchFlag, shouldStop?: StopCondition) => {
+  const weightFn = COST_FN[flag];
+  const prev = new Map<number, number>();
+  const costs = new Map<number, number>([[start, 0]]);
+  const settled = new Set<number>();
+  const remaining = new Set<number>(targets);
+  const foundTargets = new Set<number>();
 
   const queue = new Fibonacci_heap();
-  entry[start] = queue.enqueue(start, 0.0);
+  queue.enqueue(start, 0);
 
   while (queue.isValid()) {
     const system = queue.dequeue_min().get_value() as number;
 
+    if (settled.has(system)) {
+      continue;
+    }
+    settled.add(system);
+
     if (remaining.has(system)) {
       remaining.delete(system);
+      foundTargets.add(system);
+
+      if (remaining.size === 0) {
+        break;
+      }
+
+      if (shouldStop?.({ ends: targets, foundTargets, current: system })) {
+        break;
+      }
     }
 
-    if (remaining.size === 0) {
-      break;
-    }
+    const baseCost = costs.get(system);
 
-    const neighbors = graph.neighbors(system);
-
-    for (const neighbor of neighbors) {
-      if (prev[neighbor] != null) {
+    for (const neighbor of graph.neighbors(system)) {
+      if (settled.has(neighbor)) {
         continue;
       }
 
-      const new_cost = costs[system] + weight_fn(graph, neighbor);
+      const newCost = baseCost + weightFn(graph, neighbor);
+      const knownCost = costs.get(neighbor);
 
-      if (costs[neighbor] != null && new_cost < costs[neighbor]) {
-        costs[neighbor] = new_cost;
-        prev[neighbor] = system;
-        queue.decrease_key(entry[neighbor], costs[neighbor]);
-      }
-
-      if (costs[neighbor] == null) {
-        costs[neighbor] = new_cost;
-        prev[neighbor] = system;
-        entry[neighbor] = queue.enqueue(neighbor, costs[neighbor]);
+      if (knownCost === undefined || newCost < knownCost) {
+        costs.set(neighbor, newCost);
+        prev.set(neighbor, system);
+        queue.enqueue(neighbor, newCost);
       }
     }
   }
-  return path(prev, start, end);
+
+  return { prev, foundTargets };
 };
 
-const buildPath = (prev: Record<number, number>, start: number, end: number) => {
+const buildPath = (prev: Map<number, number>, start: number, end: number): number[] => {
+  if (start === end) {
+    return [start];
+  }
+
   const out: number[] = [];
-  let system: number = end;
+  let system = end;
 
   while (system !== start) {
     out.unshift(system);
 
-    if (prev[system] === undefined) {
+    const parent = prev.get(system);
+    if (parent === undefined) {
       return [];
     }
-    system = prev[system];
+    system = parent;
   }
 
   out.unshift(start);
   return out;
+};
+
+export const dijkstra = (graph: Graph, start: number, end: number, flag: SearchFlag = 'shortest'): number[] => {
+  const { prev } = search(graph, start, [end], flag);
+  return buildPath(prev, start, end);
 };
 
 export const dijkstraMulti = (
@@ -120,61 +130,14 @@ export const dijkstraMulti = (
   flag: SearchFlag = 'secure',
   shouldStop?: StopCondition,
 ) => {
-  const prev: Record<number, number> = {};
-  const costs: Record<number, number> = {};
-  const entry: Record<number, any> = {};
+  const { prev, foundTargets } = search(graph, start, ends, flag, shouldStop);
 
-  const remaining = new Set<number>(ends);
-  const foundTargets = new Set<number>();
-
-  const weightFn = COST_FN[flag];
-
-  costs[start] = 0.0;
-
-  const queue = new Fibonacci_heap();
-  entry[start] = queue.enqueue(start, 0.0);
-
-  while (queue.isValid()) {
-    const system = queue.dequeue_min().get_value() as number;
-
-    if (remaining.has(system)) {
-      remaining.delete(system);
-      foundTargets.add(system);
-
-      if (shouldStop?.({ ends, foundTargets, current: system })) {
-        break;
-      }
-    }
-
-    const neighbors = graph.neighbors(system);
-
-    for (const neighbor of neighbors) {
-      if (prev[neighbor] != null) {
-        continue;
-      }
-
-      const newCost = costs[system] + weightFn(graph, neighbor);
-
-      if (costs[neighbor] != null && newCost < costs[neighbor]) {
-        costs[neighbor] = newCost;
-        prev[neighbor] = system;
-        queue.decrease_key(entry[neighbor], costs[neighbor]);
-      }
-
-      if (costs[neighbor] == null) {
-        costs[neighbor] = newCost;
-        prev[neighbor] = system;
-        entry[neighbor] = queue.enqueue(neighbor, costs[neighbor]);
-      }
-    }
-  }
-
-  const routes: Record<number, number[]> = {};
-  for (const end of foundTargets) {
-    routes[end] = buildPath(prev, start, end);
-  }
-
-  return Object.keys(routes)
-    .map((dest) => ({ origin: start.toString(), destination: dest, systems: routes[dest], success: true }))
+  return [...foundTargets]
+    .map((dest) => ({
+      origin: start.toString(),
+      destination: dest.toString(),
+      systems: buildPath(prev, start, dest),
+      success: true,
+    }))
     .sort((a, b) => a.systems.length - b.systems.length);
 };

@@ -61,7 +61,7 @@ export class RouteService {
       avoid.forEach((sys) => g.avoidSystem(sys));
     }
 
-    return dijkstra(g, origin, destination, type).map((x) => parseInt(x));
+    return dijkstra(g, origin, destination, type);
   }
 
   routes({ origin, destinations, type, connections, avoid }: RoutesProps) {
