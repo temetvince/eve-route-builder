@@ -46,28 +46,6 @@ const COST_FN = {
 export type SearchFlag = 'secure' | 'insecure' | 'shortest';
 
 /**
- * Nodes/edges excluded from a single search run. Used by Yen's k-shortest
- * paths to force spur paths away from already-found routes. Edge keys are
- * undirected - always built with edgeKey().
- */
-export type Banned = {
-  nodes?: Set<number>;
-  edges?: Set<string>;
-};
-
-export const edgeKey = (a: number, b: number): string => (a < b ? `${a}|${b}` : `${b}|${a}`);
-
-/** Total cost of a path under the flag's cost model (entry cost per system after the first). */
-export const pathCost = (graph: Graph, path: number[], flag: SearchFlag): number => {
-  const weightFn = COST_FN[flag];
-  let cost = 0;
-  for (let i = 1; i < path.length; i++) {
-    cost += weightFn(graph, path[i]);
-  }
-  return cost;
-};
-
-/**
  * Dijkstra over the system graph with the flag's per-system entry cost.
  *
  * With the `secure` flag every unsafe system costs 50000 and every safe one
@@ -80,14 +58,7 @@ export const pathCost = (graph: Graph, path: number[], flag: SearchFlag): number
  * State lives in Maps/Sets so system ids and costs are never subject to
  * falsy-value pitfalls.
  */
-const search = (
-  graph: Graph,
-  start: number,
-  targets: number[],
-  flag: SearchFlag,
-  shouldStop?: StopCondition,
-  banned?: Banned,
-) => {
+const search = (graph: Graph, start: number, targets: number[], flag: SearchFlag, shouldStop?: StopCondition) => {
   const weightFn = COST_FN[flag];
   const prev = new Map<number, number>();
   const costs = new Map<number, number>([[start, 0]]);
@@ -123,10 +94,6 @@ const search = (
 
     for (const neighbor of graph.neighbors(system)) {
       if (settled.has(neighbor)) {
-        continue;
-      }
-
-      if (banned?.nodes?.has(neighbor) || banned?.edges?.has(edgeKey(system, neighbor))) {
         continue;
       }
 
@@ -166,14 +133,8 @@ const buildPath = (prev: Map<number, number>, start: number, end: number): numbe
   return out;
 };
 
-export const dijkstra = (
-  graph: Graph,
-  start: number,
-  end: number,
-  flag: SearchFlag = 'shortest',
-  banned?: Banned,
-): number[] => {
-  const { prev } = search(graph, start, [end], flag, undefined, banned);
+export const dijkstra = (graph: Graph, start: number, end: number, flag: SearchFlag = 'shortest'): number[] => {
+  const { prev } = search(graph, start, [end], flag);
   return buildPath(prev, start, end);
 };
 
