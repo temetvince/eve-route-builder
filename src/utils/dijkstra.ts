@@ -2,7 +2,25 @@ import { Fibonacci_heap } from './fibonacci_heap';
 import { Graph } from './graph';
 import { StopCondition } from '../types';
 
-const prefer_shortest = () => {
+// Tie-break surcharge for unsafe systems under the `shortest` flag. It must
+// stay strictly below 1/max-path-length so summing it can never flip a
+// jump-count comparison (EVE's k-space diameter is under 100 jumps; even 500
+// unsafe jumps add less than half a jump). 1/1024 is exactly representable
+// in float64, so cost sums and equality comparisons stay exact.
+const UNSAFE_TIEBREAK = 1 / 1024;
+
+// Shortest by jump count, but when two routes tie on jumps, the one entering
+// fewer unsafe systems wins - e.g. a 6-jump all-highsec route beats a 6-jump
+// route through lowsec. J-space stays neutral (see isWormholeSpace below).
+const prefer_shortest = (graph: Graph, next_sys: number) => {
+  if (isWormholeSpace(next_sys)) {
+    return 1;
+  }
+
+  if (graph.security(next_sys) < 0.45) {
+    return 1 + UNSAFE_TIEBREAK;
+  }
+
   return 1;
 };
 
