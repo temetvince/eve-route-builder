@@ -13,12 +13,6 @@ changes are recorded here. Newest first.
   through lowsec (epsilon surcharge of 1/1024 per unsafe system, never enough to change the jump-count
   ordering itself).
 
-### Removed
-
-- The `POST /route/alternatives` k-shortest-paths endpoint (Yen's algorithm), added and reverted the same
-  day when the owner dropped the wanderer feature it served. The implementation survives in git history
-  (`c6b75a5`, reverted by `15802cf`) if it is ever wanted again.
-
 ### Added
 
 - `AGENTS.md` working agreement, `.markdownlint.json`, and this changelog.

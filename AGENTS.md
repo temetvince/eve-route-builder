@@ -11,7 +11,9 @@ Facts specific to this repository:
 - `main` mirrors upstream [wanderer-industries/eve-route-builder](https://github.com/wanderer-industries/eve-route-builder);
   all changes live on `custom`. Remotes: `origin` → fork, `upstream` → wanderer-industries.
 - What the fork changes is documented in the README's "About this fork" section; the history of fork
-  changes lives in `FORK_CHANGELOG.md` — add an entry with every behavioral change, in the same commit.
+  changes lives in `FORK_CHANGELOG.md` — add an entry with every behavioral change, in the same commit. It
+  records only **net** differences vs upstream: when a fork feature is later removed, delete its entries
+  instead of adding a "Removed" entry (git history keeps the story).
 - The committed `src/assets/graph.json` is the source of truth for the universe graph. The Dockerfile must
   **never** regenerate it during builds: the Fuzzwork CSV URLs return 404, and `generateGraph` would silently
   overwrite the graph with garbage parsed from the error page, crashing the service at startup.
