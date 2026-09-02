@@ -1,3 +1,5 @@
+# eve-route-builder
+
 ## About this fork
 
 This is [temetvince/eve-route-builder](https://github.com/temetvince/eve-route-builder),
@@ -59,19 +61,23 @@ This is a tool for search route path for [EVE-ONLINE](https://www.eveonline.com/
 ## How it works?
 
 It does not use EVE-ONLINE [API](https://esi.evetech.net/ui/#/Routes/get_route_origin_destination)
-it works same. It based and copied [dijkstra](https://github.com/esi/esi-routes/blob/master/esi_routes/dijkstra.py) algorithm.
-Also, you are able to find source original source code [here](https://github.com/esi/esi-routes).
+it works same. It based and copied
+[the esi-routes dijkstra](https://github.com/esi/esi-routes/blob/master/esi_routes/dijkstra.py) algorithm.
+Also, you are able to find the original source code in
+[the esi-routes repository](https://github.com/esi/esi-routes).
 
 ## Getting started
 
 ### Install dependencies
 
 ```bash
-$ npm install
+npm install
 ```
 
 ### Downloads
-Download the latest files solar system tables from [here](https://www.fuzzwork.co.uk/dump/latest/). It should be in .csv format
+
+Download the latest solar system tables from
+[the Fuzzwork latest dump](https://www.fuzzwork.co.uk/dump/latest/). They should be in .csv format.
 
 Link for download [mapSolarSystems.csv](https://www.fuzzwork.co.uk/dump/latest/mapSolarSystems.csv)
 
@@ -82,14 +88,14 @@ These files should be placed in folder 'input'
 ### Generate new graph
 
 ```bash
-$ npm run generateGraph
+npm run generateGraph
 ```
 
 ### And build and start
 
 ```bash
-$ npm run build
-$ npm run exec
+npm run build
+npm run exec
 ```
 
 ## How to use
@@ -164,9 +170,6 @@ const J212812 = 31001180;
 
 
 ```
-
-
-
 
 ## License
 
