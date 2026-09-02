@@ -6,7 +6,8 @@ import { Graph } from './graph';
 const weight = (security: number, flag: SearchFlag) => {
   if (flag === 'secure') return security < 0.45 ? 50000 : 1;
   if (flag === 'insecure') return security >= 0.45 ? 50000 : 1;
-  return 1;
+  // shortest: unsafe systems carry the safety tie-break surcharge.
+  return security < 0.45 ? 1 + 1 / 1024 : 1;
 };
 
 type TestGraph = { securities: number[]; adj: number[][] };

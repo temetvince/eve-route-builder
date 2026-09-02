@@ -18,6 +18,10 @@ a fork of [wanderer-industries/eve-route-builder](https://github.com/wanderer-in
   decrease-key branch was dead code and stayed optimal only by accident of the
   node-only weight model) and falsy-id-safe path reconstruction, shared by
   `dijkstra` and `dijkstraMulti`.
+- **`shortest` breaks ties toward safety.** Routes are still ranked by jump count first, but when two routes
+  tie on jumps, the one entering fewer unsafe systems wins — a 6-jump all-highsec route beats a 6-jump route
+  through lowsec. Implemented as an epsilon surcharge (1/1024 per unsafe system) that can never change the
+  jump-count ordering itself.
 - **Test suites**: a reference-comparison suite (~10k randomized graphs across
   all flags, mapped chains and multi-destination included), a heap sanity
   check, and a regression test for the C1 → C2 scenario above.
