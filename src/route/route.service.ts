@@ -2,8 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Graph } from '../utils/graph';
 import graphJson from '../assets/graph.json';
 import { dijkstra, dijkstraMulti, SearchFlag } from '../utils/dijkstra';
+import { kShortestPaths } from '../utils/kshortest';
 import additionalRoutes from './../assets/additionalRoutes.json';
 import { AdditionalSystem } from '../types';
+
+const MAX_ALTERNATIVES = 5;
 
 type RoutesProps = {
   origin: string;
@@ -78,6 +81,38 @@ export class RouteService {
         systems: this.route(parseInt(origin), parseInt(x), type, connections, avoid),
       };
     });
+  }
+
+  alternatives(
+    origin: number,
+    destination: number,
+    type: SearchFlag,
+    connections?: number[][],
+    avoid?: number[],
+    count?: number,
+  ) {
+    if (avoid && (avoid.includes(origin) || avoid.includes(destination))) {
+      return [];
+    }
+
+    const g = this.graph.copy();
+
+    if (connections) {
+      connections.forEach(([from, to]) => g.addAdditionalChain(from, to));
+    }
+
+    if (avoid) {
+      avoid.forEach((sys) => g.avoidSystem(sys));
+    }
+
+    const k = Math.min(Math.max(count ?? 3, 1), MAX_ALTERNATIVES);
+
+    return kShortestPaths(g, origin, destination, type, k).map((systems) => ({
+      origin: origin.toString(),
+      destination: destination.toString(),
+      success: true,
+      systems,
+    }));
   }
 
   findClosest({ origin, destinations, type, connections, avoid, count }: Routes2Props) {
