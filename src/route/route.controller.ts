@@ -60,6 +60,32 @@ export class RouteController {
     });
   }
 
+  @Post('/alternatives')
+  alternatives(
+    @Body('origin') origin: number,
+    @Body('destination') destination: number,
+    @Body('flag') flag: SearchFlag,
+    @Body('connections') connections?: string[],
+    @Body('avoid') avoid?: number[],
+    @Body('count') count?: number,
+  ): RouteResult[] | string {
+    if (!this.routeService.checkSystemExists(origin)) {
+      return `Origin solar system - ${origin} is not exists.`;
+    }
+
+    if (!this.routeService.checkSystemExists(destination)) {
+      return `Destination solar system - ${destination} is not exists.`;
+    }
+
+    if (!SEARCH_TYPES.includes(flag)) {
+      return `Route flag is incorrect ${flag} - type should be one of (${SEARCH_TYPES.join('/')}).`;
+    }
+
+    const parsedConnections = (connections || []).map((x) => x.split('|').map((y) => parseInt(y)));
+
+    return this.routeService.alternatives(origin, destination, flag, parsedConnections, avoid, count);
+  }
+
   @Post('/findClosest')
   findClosest(
     @Body('origin') origin: number,

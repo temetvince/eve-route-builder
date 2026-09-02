@@ -16,6 +16,7 @@ Facts specific to this repository:
   overwrite the graph with garbage parsed from the error page, crashing the service at startup.
 - Build: `docker build -t eve-route-builder-custom:latest .` — then **smoke-test it** (run the container and
   POST a route to `/route/multiple`); a clean build proves nothing about runtime.
-- Tests: `npx jest src/utils` must be green. Two upstream suites (`Graph` snapshots and the controller spec)
-  fail on pristine checkouts too — they are not yours to fix and not a regression signal.
+- Tests: the fork's suites (`npx jest src/utils/dijkstra src/utils/kshortest src/utils/heap`) must be green.
+  Two upstream suites fail on pristine checkouts too — `src/utils/graph.test.ts` (stale snapshots) and the
+  controller spec; they are not yours to fix and not a regression signal.
 - Deployment happens from the wanderer fork's `deploy/update.sh`; this repo has no deploy assets of its own.
