@@ -18,13 +18,9 @@ a fork of [wanderer-industries/eve-route-builder](https://github.com/wanderer-in
   decrease-key branch was dead code and stayed optimal only by accident of the
   node-only weight model) and falsy-id-safe path reconstruction, shared by
   `dijkstra` and `dijkstraMulti`.
-- **k-shortest alternative routes.** `POST /route/alternatives` with
-  `{ origin, destination, flag, connections, avoid, count }` returns up to `count` (max 5) distinct loopless
-  routes ranked best-first, via Yen's algorithm on top of the same cost model. Used by wanderer's expandable
-  route rows.
 - **Test suites**: a reference-comparison suite (~10k randomized graphs across
-  all flags, mapped chains and multi-destination included), a brute-force-verified k-shortest suite, a heap
-  sanity check, and a regression test for the C1 → C2 scenario above.
+  all flags, mapped chains and multi-destination included), a heap sanity
+  check, and a regression test for the C1 → C2 scenario above.
 
 Two upstream test suites fail on a pristine checkout as well (stale `Graph`
 snapshots and controller spec drift) — they are unrelated to these changes.
@@ -54,8 +50,8 @@ community-edition `docker-compose.yml`.
 ### Run the tests
 
 ```bash
-npx jest src/utils          # this fork's suites (all passing)
-npx jest                    # everything, including the two pre-existing upstream failures
+npx jest src/utils/dijkstra src/utils/heap   # this fork's suites (all passing)
+npx jest                                     # everything, including the two pre-existing upstream failures
 ```
 
 ## Description
