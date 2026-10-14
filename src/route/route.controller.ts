@@ -68,7 +68,7 @@ export class RouteController {
     @Body('connections') connections?: string[],
     @Body('avoid') avoid?: number[],
     @Body('count') count?: number,
-  ): RouteResult[] | string {
+  ): RouteResult<number>[] | string {
     if (!this.routeService.checkSystemExists(origin)) {
       return `Origin solar system - ${origin} is not exists.`;
     }

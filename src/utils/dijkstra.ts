@@ -175,6 +175,6 @@ export const dijkstraMulti = (
   }
 
   return Object.keys(routes)
-    .map((dest) => ({ origin: start.toString(), destination: dest, systems: routes[dest], success: true }))
+    .map((dest) => ({ origin: start, destination: Number(dest), systems: routes[dest], success: true }))
     .sort((a, b) => a.systems.length - b.systems.length);
 };

@@ -5,10 +5,13 @@ export interface AdditionalSystem {
   neighbors: number[];
 }
 
-export type Route = {
-  origin: string;
-  destination: string;
+export type Route<SystemId extends string | number = string> = {
+  origin: SystemId;
+  destination: SystemId;
 };
 
-export type RouteResult = { systems: number[]; success: boolean } & Route;
+export type RouteResult<SystemId extends string | number = string> = {
+  systems: number[];
+  success: boolean;
+} & Route<SystemId>;
 export type StopCondition = (args: { ends: number[]; foundTargets: Set<number>; current?: number }) => boolean;
